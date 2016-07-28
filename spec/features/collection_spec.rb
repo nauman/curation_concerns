@@ -73,10 +73,15 @@ feature 'collection' do
 
   describe 'show collection' do
     let!(:collection) do
-      create(:collection, user: user, description: ['collection description'], members: [gw1, gw2])
+      create(:collection, user: user, description: ['collection description'])
     end
 
     before do
+      [gw1, gw2].each do |gw|
+        gw.member_of_collections = [collection]
+        gw.save
+      end
+
       sign_in user
       visit search_path_for_my_collections
     end
@@ -120,9 +125,14 @@ feature 'collection' do
 
   describe 'edit collection' do
     let!(:collection) do
-      create(:collection, user: user, description: ['collection description'], members: [gw1, gw2])
+      create(:collection, user: user, description: ['collection description'])
     end
     before do
+      [gw1, gw2].each do |gw|
+        gw.member_of_collections = [collection]
+        gw.save!
+      end
+
       sign_in user
       visit search_path_for_my_collections
     end
@@ -160,69 +170,18 @@ feature 'collection' do
         expect(page).to have_content 'review the errors'
       end
     end
-
-    it 'removes a work from a collection from edit page' do
-      expect(page).to have_content 'Test collection title'
-      within("#document_#{collection.id}") do
-        click_link('Edit Collection')
-      end
-      expect(page).to have_field 'collection_title', with: 'Test collection title'
-      expect(page).to have_field 'collection_description', with: 'collection description'
-      expect(page).to have_content(gw1.title.first)
-      expect(page).to have_content(gw2.title.first)
-      within("#document_#{gw1.id}") do
-        click_link('Remove From Collection')
-      end
-      expect(page).to have_content 'Test collection title'
-      expect(page).to have_content 'collection description'
-      expect(page).not_to have_content(gw1.title.first)
-      expect(page).to have_content(gw2.title.first)
-    end
-
-    it 'removes a work from a collection from show page' do
-      expect(page).to have_content 'Test collection title'
-      within('#document_' + collection.id) do
-        click_link 'Test collection title'
-      end
-      expect(page).to have_content(gw1.title.first)
-      expect(page).to have_content(gw2.title.first)
-      within("#document_#{gw1.id}") do
-        click_link('Remove From Collection')
-      end
-      expect(page).to have_content 'Test collection title'
-      expect(page).to have_content 'collection description'
-      expect(page).not_to have_content(gw1.title.first)
-      expect(page).to have_content(gw2.title.first)
-    end
-
-    it 'removes all works from a collection' do
-      skip 'This is from Sufia, not sure if it should be here.'
-      expect(page).to have_content 'Test collection title'
-      within('#document_' + collection.id) do
-        click_link('Edit Collection')
-      end
-      expect(page).to have_field 'collection_title', with: 'Test collection title'
-      expect(page).to have_field 'collection_description', with: 'collection description'
-      expect(page).to have_content(gw1.title.first)
-      expect(page).to have_content(gw2.title.first)
-      first('input#check_all').click
-      click_link('Remove From Collection')
-      expect(page).to have_content 'Test collection title'
-      expect(page).to have_content 'collection description'
-      expect(page).not_to have_content(gw1.title.first)
-      expect(page).not_to have_content(gw2.title.first)
-    end
   end
 
   describe 'show pages of a collection' do
-    let(:generic_works) do
-      (0..12).map { create(:generic_work, user: user) }
-    end
     let!(:collection) do
-      create(:collection, user: user, description: ['collection description'], members: generic_works)
+      create(:collection, user: user, description: ['collection description'])
     end
 
     before do
+      12.times do
+        create(:generic_work, user: user, member_of_collections: [collection])
+      end
+
       sign_in user
       visit search_path_for_my_collections
     end
