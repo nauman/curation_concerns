@@ -60,6 +60,10 @@ RSpec.configure do |config|
                                  :truncation
                                end
     DatabaseCleaner.start
+    MinterState.create!(
+      namespace: ActiveFedora::Noid.config.namespace,
+      template: ActiveFedora::Noid.config.template
+    )
   end
 
   config.after do
